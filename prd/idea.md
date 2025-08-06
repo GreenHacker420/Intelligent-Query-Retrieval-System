@@ -66,12 +66,12 @@ To build an AI-powered system that:
 ```mermaid
 flowchart TD
     A[User Uploads Document (PDF/DOCX)] --> B[Document Preprocessing & Chunking]
-    B --> C[Embedding via OpenAI]
+    B --> C[Embedding via Gemini text-embedding-004]
     C --> D[Pinecone Vector Indexing]
-    E[User Asks Natural Language Query] --> F[LLM Parser (Intent & Entity Extraction)]
+    E[User Asks Natural Language Query] --> F[Gemini 1.5 Pro Parser (Intent & Entity Extraction)]
     F --> G[Pinecone Semantic Search]
-    G --> H[Clause Reranking (LLM)]
-    H --> I[Logic Evaluation (LLM)]
+    G --> H[Clause Reranking (Gemini 1.5 Pro)]
+    H --> I[Logic Evaluation (Gemini 1.5 Pro)]
     I --> J[Structured JSON Output + Rationale]
 ```
 
@@ -81,8 +81,8 @@ flowchart TD
 |-----------|----------------|
 | Backend | FastAPI |
 | Vector Store | Pinecone |
-| Embeddings | OpenAI (text-embedding-3-small) |
-| LLM | GPT-4 via OpenAI |
+| Embeddings | Google Gemini (text-embedding-004) |
+| LLM | Google Gemini 1.5 Pro |
 | PDF Parsing | PyMuPDF / pdfminer.six |
 | DOCX Parsing | python-docx |
 | Database (optional) | PostgreSQL / SQLite |

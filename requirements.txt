@@ -1,0 +1,42 @@
+# Core FastAPI and web framework
+fastapi==0.104.1
+uvicorn==0.24.0
+python-multipart==0.0.6
+aiofiles==23.2.1
+httpx==0.25.2
+
+# Google Gemini AI
+google-generativeai==0.3.2
+
+# Vector Database
+pinecone-client==2.2.4
+
+# Document Processing
+pymupdf==1.23.8
+python-docx==1.1.0
+pdfminer.six==20221105
+
+# Data Validation and Models
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Environment and Configuration
+python-dotenv==1.0.0
+
+# Async and HTTP
+asyncio
+aiohttp==3.9.1
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+
+# Utilities
+typing-extensions==4.8.0
+loguru==0.7.2
+
+# Development
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0

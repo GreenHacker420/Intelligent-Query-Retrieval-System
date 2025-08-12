@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Query Retrieval System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-brain"></i>
+                    <h1>Intelligent Query Retrieval System</h1>
+                </div>
+                <div class="subtitle">
+                    AI-Powered Document Analysis for HackRx 2025
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="card">
+                    <h2><i class="fas fa-upload"></i> Document Analysis</h2>
+                    
+                    <!-- Document URL Input -->
+                    <div class="form-group">
+                        <label for="documentUrl">Document URL</label>
+                        <div class="input-wrapper">
+                            <input 
+                                type="url" 
+                                id="documentUrl" 
+                                placeholder="https://example.com/document.pdf"
+                                required
+                            >
+                            <div class="input-icon">
+                                <i class="fas fa-link"></i>
+                            </div>
+                        </div>
+                        <div class="help-text">
+                            Enter a direct URL to your PDF or DOCX document
+                        </div>
+                    </div>
+
+                    <!-- Sample URLs -->
+                    <div class="sample-urls">
+                        <span class="sample-label">Sample Documents:</span>
+                        <button type="button" class="sample-btn" data-url="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf">
+                            Sample PDF
+                        </button>
+                        <button type="button" class="sample-btn" data-url="https://file-examples.com/storage/fe68c1e7b8c3d5b7e9c8c8c/2017/10/file_example_PDF_1MB.pdf">
+                            Example Document
+                        </button>
+                    </div>
+
+                    <!-- Questions Input -->
+                    <div class="form-group">
+                        <label for="questions">Questions</label>
+                        <div class="questions-container">
+                            <div class="question-input">
+                                <input 
+                                    type="text" 
+                                    placeholder="What is the waiting period for pre-existing conditions?"
+                                    class="question-field"
+                                >
+                                <button type="button" class="remove-question" style="display: none;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" id="addQuestion" class="add-question-btn">
+                            <i class="fas fa-plus"></i> Add Another Question
+                        </button>
+                    </div>
+
+                    <!-- Sample Questions -->
+                    <div class="sample-questions">
+                        <span class="sample-label">Sample Questions:</span>
+                        <div class="sample-question-grid">
+                            <button type="button" class="sample-question-btn">
+                                Does this policy cover knee surgery?
+                            </button>
+                            <button type="button" class="sample-question-btn">
+                                What are the exclusions for maternity benefits?
+                            </button>
+                            <button type="button" class="sample-question-btn">
+                                What is the waiting period for pre-existing diseases?
+                            </button>
+                            <button type="button" class="sample-question-btn">
+                                Are there any age restrictions for coverage?
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="submit-section">
+                        <button type="button" id="analyzeBtn" class="analyze-btn">
+                            <i class="fas fa-search"></i>
+                            <span class="btn-text">Analyze Document</span>
+                            <div class="loading-spinner" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <div class="card">
+                    <div class="results-header">
+                        <h2><i class="fas fa-chart-line"></i> Analysis Results</h2>
+                        <button type="button" id="exportBtn" class="export-btn">
+                            <i class="fas fa-download"></i> Export Results
+                        </button>
+                    </div>
+                    
+                    <!-- Processing Summary -->
+                    <div class="processing-summary" id="processingSummary">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+
+                    <!-- Results Container -->
+                    <div class="results-container" id="resultsContainer">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Error Section -->
+            <section class="error-section" id="errorSection" style="display: none;">
+                <div class="card error-card">
+                    <div class="error-content">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Analysis Error</h3>
+                        <p id="errorMessage"></p>
+                        <button type="button" id="retryBtn" class="retry-btn">
+                            <i class="fas fa-redo"></i> Try Again
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2025 Intelligent Query Retrieval System - HackRx 2025</p>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">API Documentation</a>
+                    <a href="#" class="footer-link">GitHub</a>
+                    <a href="#" class="footer-link">Support</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,1 +1,15 @@
 .idea/
+.env
+venv/
+.vscode/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+htmlcov/
+.coverage
+.tox/
+.pytest_cache/
+

@@ -1,0 +1,33 @@
+# Working requirements for Intelligent Query Retrieval System
+# These are the packages that are actually installed and working
+
+# Core FastAPI and web framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.20
+
+# Google Gemini AI (latest working version)
+google-genai==1.29.0
+
+# Vector Database
+pinecone==5.4.0
+
+# Document Processing (compatible versions)
+python-docx==1.1.0
+pdfminer.six==20221105
+# pymupdf==1.23.8  # Disabled due to Python 3.13 compatibility issues
+
+# Data validation / settings (compatible versions)
+pydantic>=2.10.0
+pydantic-settings>=2.6.0
+
+# HTTP client and async support
+aiohttp==3.9.1
+
+# Environment & configuration
+python-dotenv==1.0.0
+typing-extensions>=4.11.0
+loguru==0.7.2
+
+# Additional utilities
+asyncio

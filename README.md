@@ -162,24 +162,6 @@ curl -X POST "http://localhost:8000/api/v1/hackrx/run" \
 
 ## 🔧 Configuration ✅ **FULLY CONFIGURED**
 
-### Environment Variables Status
-
-```env
-# ✅ CONFIGURED AND WORKING
-GEMINI_API_KEY=AIzaSyC3afvFLaqkfDuREqVco6ahr4rYc-3F8UY
-PINECONE_API_KEY=pcsk_4mHWWQ_6rDmYFdPSbvgGFzUNMwa1WLiGm8ubccode2RR3YY3yAG4Gk4WmBVbBxV295SSWh
-PINECONE_ENVIRONMENT=us-east-1-aws
-PINECONE_INDEX_NAME=hackrx-documents
-
-# ✅ OPTIMIZED SETTINGS
-APP_NAME=Intelligent Query Retrieval System
-DEBUG=false
-MAX_CHUNK_SIZE=1024
-CHUNK_OVERLAP=128
-MAX_RETRIEVAL_RESULTS=20
-RERANK_TOP_K=5
-```
-
 ### 📚 API Documentation
 
 - **Swagger UI**: `http://localhost:8000/docs` (when debug=true)

@@ -22,7 +22,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
 def main():
     """Start the frontend server."""
-    PORT = 3000
+    PORT = 5001
     
     print("🌐 Starting Frontend Server...")
     print(f"📁 Serving files from: {Path(__file__).parent}")
@@ -40,7 +40,7 @@ def main():
                 webbrowser.open(f'http://localhost:{PORT}')
                 print("🌍 Browser opened automatically")
             except:
-                print("🌍 Please open http://localhost:3000 in your browser")
+                print(f"🌍 Please open http://localhost:{PORT} in your browser")
             
             httpd.serve_forever()
             

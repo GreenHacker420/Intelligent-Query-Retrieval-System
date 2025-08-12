@@ -10,6 +10,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 from src.core.config import get_settings
 from src.core.gemini_client import get_gemini_client
 from src.services.document_processor import get_document_processor
+from src.services.vector_store import get_vector_store
+from src.services.retrieval_engine import get_retrieval_engine
 
 
 async def test_configuration():
@@ -66,20 +68,57 @@ async def test_document_processor():
         return False
 
 
+async def test_vector_store():
+    """Test vector store initialization (without requiring API keys)."""
+    print("\n🗄️ Testing vector store...")
+    try:
+        # Test vector store class instantiation
+        from src.services.vector_store import VectorStore
+        vector_store = VectorStore()
+        print("✅ Vector store class instantiated successfully")
+
+        # Test vector ID generation
+        vector_id = vector_store._generate_vector_id("test_doc", 0)
+        print(f"✅ Vector ID generation: {vector_id}")
+
+        print("⚠️  Full vector store test requires Pinecone API key")
+        return True
+
+    except Exception as e:
+        print(f"❌ Vector store test failed: {e}")
+        return False
+
+
+async def test_retrieval_engine():
+    """Test retrieval engine initialization."""
+    print("\n🔍 Testing retrieval engine...")
+    try:
+        from src.services.retrieval_engine import RetrievalEngine
+        retrieval_engine = RetrievalEngine()
+        print("✅ Retrieval engine class instantiated successfully")
+
+        print("⚠️  Full retrieval engine test requires Pinecone API key")
+        return True
+
+    except Exception as e:
+        print(f"❌ Retrieval engine test failed: {e}")
+        return False
+
+
 async def test_api_models():
     """Test API model validation."""
     print("\n📋 Testing API models...")
     try:
         from src.api.models.request import QueryRequest
         from src.api.models.response import QueryResponse, QueryAnswer, ClauseReference, ProcessingMetadata, ProcessingSummary
-        
+
         # Test request model
         request = QueryRequest(
             documents="https://example.com/test.pdf",
             questions=["What is covered?", "What are the conditions?"]
         )
         print("✅ Request model validation successful")
-        
+
         # Test response model components
         clause_ref = ClauseReference(page=1, clause_title="Test Clause")
         metadata = ProcessingMetadata(
@@ -88,7 +127,7 @@ async def test_api_models():
             chunks_analyzed=3,
             total_tokens=100
         )
-        
+
         answer = QueryAnswer(
             question="Test question?",
             isCovered=True,
@@ -98,18 +137,18 @@ async def test_api_models():
             confidence_score=0.9,
             processing_metadata=metadata
         )
-        
+
         summary = ProcessingSummary(
             total_questions=1,
             successful_responses=1,
             total_processing_time="1.0s",
             document_pages_processed=5
         )
-        
+
         response = QueryResponse(answers=[answer], processing_summary=summary)
         print("✅ Response model validation successful")
         return True
-        
+
     except Exception as e:
         print(f"❌ API models test failed: {e}")
         return False
@@ -123,6 +162,8 @@ async def main():
         test_configuration,
         test_gemini_client,
         test_document_processor,
+        test_vector_store,
+        test_retrieval_engine,
         test_api_models
     ]
     

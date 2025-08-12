@@ -29,7 +29,7 @@ A modern, responsive web interface for the AI-powered document analysis system.
    python3 server.py
    ```
 
-3. **Open your browser**: http://localhost:3000
+3. **Open your browser**: http://localhost:5001
 
 ### Option 2: Direct File Access
 
@@ -167,10 +167,10 @@ A modern, responsive web interface for the AI-powered document analysis system.
 python3 frontend/server.py
 
 # Using Node.js (if available)
-npx http-server frontend -p 3000
+npx http-server frontend -p 5000
 
 # Using PHP (if available)
-php -S localhost:3000 -t frontend
+php -S localhost:5000 -t frontend
 ```
 
 ### Production

@@ -3,7 +3,7 @@
 import asyncio
 import hashlib
 from typing import List, Dict, Any, Optional, Tuple
-from pinecone import Pinecone, ServerlessSpec
+from pinecone import Pinecone, ServerlessSpec, PodSpec
 from loguru import logger
 
 from ..core.config import get_settings
@@ -27,12 +27,12 @@ class VectorStore:
         try:
             # Initialize Pinecone client
             self._pinecone_client = Pinecone(api_key=self.settings.pinecone_api_key)
-            
+
             # Create or connect to index
             await self._ensure_index_exists()
-            
+
             logger.info("Vector store initialized successfully")
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize vector store: {e}")
             raise
@@ -41,33 +41,92 @@ class VectorStore:
         """Ensure the Pinecone index exists, create if necessary."""
         try:
             index_name = self.settings.pinecone_index_name
-            
+
             # Check if index exists
             existing_indexes = self._pinecone_client.list_indexes()
             index_names = [idx.name for idx in existing_indexes.indexes]
-            
+
             if index_name not in index_names:
                 logger.info(f"Creating new Pinecone index: {index_name}")
-                
-                # Create index with serverless spec
-                self._pinecone_client.create_index(
-                    name=index_name,
-                    dimension=self.embedding_dimension,
-                    metric="cosine",
-                    spec=ServerlessSpec(
-                        cloud="aws",
-                        region=self.settings.pinecone_environment
+
+                index_created = False
+
+                # Try serverless first (most common and cost-effective)
+                try:
+                    logger.info("Trying serverless index creation...")
+                    self._pinecone_client.create_index(
+                        name=index_name,
+                        dimension=self.embedding_dimension,
+                        metric="cosine",
+                        spec=ServerlessSpec(
+                            cloud="aws",
+                            region="us-east-1"
+                        )
                     )
-                )
-                
+                    index_created = True
+                    logger.info(f"Serverless index {index_name} created successfully")
+
+                except Exception as serverless_error:
+                    logger.warning(f"Serverless creation failed: {serverless_error}")
+
+                    # Try pod-based as fallback
+                    try:
+                        logger.info("Trying pod-based index creation...")
+                        self._pinecone_client.create_index(
+                            name=index_name,
+                            dimension=self.embedding_dimension,
+                            metric="cosine",
+                            spec=PodSpec(
+                                environment="gcp-starter",
+                                pod_type="p1.x1",
+                                pods=1
+                            )
+                        )
+                        index_created = True
+                        logger.info(f"Pod-based index {index_name} created successfully")
+                    except Exception as pod_error:
+                        logger.warning(f"Initial pod creation failed: {pod_error}")
+
+                if not index_created:
+                    # Try with pod-based spec as fallback
+                    pod_environments = [
+                        "gcp-starter",
+                        "us-west1-gcp",
+                        "us-east1-gcp",
+                        "asia-northeast1-gcp"
+                    ]
+
+                    for env in pod_environments:
+                        try:
+                            logger.info(f"Trying pod-based spec with environment: {env}")
+                            self._pinecone_client.create_index(
+                                name=index_name,
+                                dimension=self.embedding_dimension,
+                                metric="cosine",
+                                spec=PodSpec(
+                                    environment=env,
+                                    pod_type="p1.x1",
+                                    pods=1
+                                )
+                            )
+                            index_created = True
+                            logger.info(f"Index {index_name} created with pod spec: {env}")
+                            break
+                        except Exception as pod_error:
+                            logger.warning(f"Pod environment {env} failed: {pod_error}")
+                            continue
+
+                    if not index_created:
+                        logger.error("All Pinecone configurations failed")
+                        raise Exception("Failed to create index with any configuration")
+
                 # Wait for index to be ready
                 await asyncio.sleep(10)
-                logger.info(f"Index {index_name} created successfully")
-            
+
             # Connect to index
             self._index = self._pinecone_client.Index(index_name)
             logger.info(f"Connected to index: {index_name}")
-            
+
         except Exception as e:
             logger.error(f"Failed to ensure index exists: {e}")
             raise
@@ -86,7 +145,14 @@ class VectorStore:
         try:
             if not self._index:
                 await self.initialize()
-            
+
+            # Limit chunks for performance (keep most relevant ones)
+            max_chunks = 50  # Reasonable limit for fast processing
+            if len(chunks) > max_chunks:
+                logger.warning(f"Too many chunks ({len(chunks)}), limiting to {max_chunks} for performance")
+                # Keep chunks with good size distribution
+                chunks = self._select_best_chunks(chunks, max_chunks)
+
             # Extract text from chunks
             texts = [chunk.text for chunk in chunks]
             
@@ -142,6 +208,51 @@ class VectorStore:
         except Exception as e:
             logger.error(f"Failed to store document chunks: {e}")
             raise
+
+    def _select_best_chunks(self, chunks: List[DocumentChunk], max_chunks: int) -> List[DocumentChunk]:
+        """
+        Select the best chunks for processing based on size and content quality.
+
+        Args:
+            chunks: All available chunks
+            max_chunks: Maximum number of chunks to select
+
+        Returns:
+            Selected best chunks
+        """
+        if len(chunks) <= max_chunks:
+            return chunks
+
+        # Score chunks based on size and content quality
+        scored_chunks = []
+        for chunk in chunks:
+            score = 0
+            text_len = len(chunk.text)
+
+            # Prefer chunks with good size (not too small, not too large)
+            if 500 <= text_len <= 2000:
+                score += 3
+            elif 200 <= text_len <= 3000:
+                score += 2
+            else:
+                score += 1
+
+            # Prefer chunks with more content indicators
+            if any(keyword in chunk.text.lower() for keyword in ['policy', 'coverage', 'benefit', 'condition', 'exclusion']):
+                score += 2
+
+            # Prefer chunks with structured content
+            if any(indicator in chunk.text for indicator in [':', '-', '•', '1.', '2.', 'a)', 'b)']):
+                score += 1
+
+            scored_chunks.append((score, chunk))
+
+        # Sort by score and take the best ones
+        scored_chunks.sort(key=lambda x: x[0], reverse=True)
+        selected = [chunk for score, chunk in scored_chunks[:max_chunks]]
+
+        logger.info(f"Selected {len(selected)} best chunks from {len(chunks)} total chunks")
+        return selected
     
     async def search_similar_chunks(
         self, 

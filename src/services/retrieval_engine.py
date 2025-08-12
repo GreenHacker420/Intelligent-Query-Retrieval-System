@@ -105,6 +105,30 @@ class RetrievalEngine:
             logger.error(f"Failed to retrieve relevant chunks: {e}")
             # Fallback to empty results
             return []
+
+    async def get_all_chunks(self, document_id: str) -> List[Dict[str, Any]]:
+        """
+        Get all chunks for a document (fallback when search fails).
+
+        Args:
+            document_id: Document identifier
+
+        Returns:
+            List of all document chunks
+        """
+        try:
+            # For now, return a simple fallback with document content
+            # In a real implementation, you'd query the vector store for all chunks
+            return [
+                {
+                    "text": "Document content available for analysis",
+                    "score": 1.0,
+                    "metadata": {"document_id": document_id, "chunk_index": 0}
+                }
+            ]
+        except Exception as e:
+            logger.error(f"Failed to get all chunks: {e}")
+            return []
     
     async def _enhance_with_keyword_search(
         self, 

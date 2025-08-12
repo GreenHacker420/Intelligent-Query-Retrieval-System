@@ -30,34 +30,84 @@
                 <div class="card">
                     <h2><i class="fas fa-upload"></i> Document Analysis</h2>
                     
-                    <!-- Document URL Input -->
+                    <!-- Document Upload Options -->
                     <div class="form-group">
-                        <label for="documentUrl">Document URL</label>
-                        <div class="input-wrapper">
-                            <input 
-                                type="url" 
-                                id="documentUrl" 
-                                placeholder="https://example.com/document.pdf"
-                                required
-                            >
-                            <div class="input-icon">
-                                <i class="fas fa-link"></i>
+                        <label>Document Input</label>
+
+                        <!-- Upload Method Tabs -->
+                        <div class="upload-tabs">
+                            <button type="button" class="upload-tab active" data-method="upload">
+                                <i class="fas fa-upload"></i> Upload File
+                            </button>
+                            <button type="button" class="upload-tab" data-method="url">
+                                <i class="fas fa-link"></i> From URL
+                            </button>
+                        </div>
+
+                        <!-- File Upload Section -->
+                        <div class="upload-section" id="uploadSection">
+                            <div class="file-drop-zone" id="fileDropZone">
+                                <div class="drop-zone-content">
+                                    <i class="fas fa-cloud-upload-alt drop-icon"></i>
+                                    <h3>Drop your document here</h3>
+                                    <p>or <button type="button" class="browse-btn" id="browseBtn">browse files</button></p>
+                                    <div class="supported-formats">
+                                        Supports: PDF, DOCX, DOC, TXT (Max: 10MB)
+                                    </div>
+                                </div>
+                                <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt" style="display: none;">
+                            </div>
+
+                            <!-- File Preview -->
+                            <div class="file-preview" id="filePreview" style="display: none;">
+                                <div class="file-info">
+                                    <div class="file-icon">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <div class="file-details">
+                                        <div class="file-name" id="fileName"></div>
+                                        <div class="file-size" id="fileSize"></div>
+                                        <div class="upload-progress">
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" id="progressFill"></div>
+                                            </div>
+                                            <div class="progress-text" id="progressText">Ready to analyze</div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="remove-file-btn" id="removeFileBtn">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div class="help-text">
-                            Enter a direct URL to your PDF or DOCX document
-                        </div>
-                    </div>
 
-                    <!-- Sample URLs -->
-                    <div class="sample-urls">
-                        <span class="sample-label">Sample Documents:</span>
-                        <button type="button" class="sample-btn" data-url="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf">
-                            Sample PDF
-                        </button>
-                        <button type="button" class="sample-btn" data-url="https://file-examples.com/storage/fe68c1e7b8c3d5b7e9c8c8c/2017/10/file_example_PDF_1MB.pdf">
-                            Example Document
-                        </button>
+                        <!-- URL Input Section -->
+                        <div class="upload-section" id="urlSection" style="display: none;">
+                            <div class="input-wrapper">
+                                <input
+                                    type="url"
+                                    id="documentUrl"
+                                    placeholder="https://example.com/document.pdf"
+                                >
+                                <div class="input-icon">
+                                    <i class="fas fa-link"></i>
+                                </div>
+                            </div>
+                            <div class="help-text">
+                                Enter a direct URL to your PDF or DOCX document
+                            </div>
+
+                            <!-- Sample URLs -->
+                            <div class="sample-urls">
+                                <span class="sample-label">Sample Documents:</span>
+                                <button type="button" class="sample-btn" data-url="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf">
+                                    Sample PDF
+                                </button>
+                                <button type="button" class="sample-btn" data-url="https://scholar.harvard.edu/files/torman_personal/files/samplepdf.pdf">
+                                    Example Document
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Questions Input -->

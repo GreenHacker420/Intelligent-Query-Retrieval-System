@@ -2,7 +2,8 @@
 
 import asyncio
 from typing import List, Dict, Any, Optional
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from loguru import logger
 
 from .config import get_settings
@@ -10,78 +11,74 @@ from .config import get_settings
 
 class GeminiClient:
     """Client for interacting with Google Gemini AI services."""
-    
+
     def __init__(self):
         """Initialize the Gemini client."""
         self.settings = get_settings()
+        self._client = None
         self._configure_client()
-        self._embedding_model = None
-        self._llm_model = None
-    
+
     def _configure_client(self):
         """Configure the Gemini API client."""
         try:
-            genai.configure(api_key=self.settings.gemini_api_key)
+            # Create client with API key
+            self._client = genai.Client(api_key=self.settings.gemini_api_key)
             logger.info("Gemini AI client configured successfully")
         except Exception as e:
             logger.error(f"Failed to configure Gemini AI client: {e}")
             raise
-    
+
     @property
-    def embedding_model(self):
-        """Get or create the embedding model instance."""
-        if self._embedding_model is None:
-            self._embedding_model = genai.GenerativeModel(self.settings.embedding_model)
-        return self._embedding_model
-    
-    @property
-    def llm_model(self):
-        """Get or create the LLM model instance."""
-        if self._llm_model is None:
-            self._llm_model = genai.GenerativeModel(self.settings.llm_model)
-        return self._llm_model
+    def client(self):
+        """Get the Gemini client instance."""
+        if self._client is None:
+            self._configure_client()
+        return self._client
     
     async def generate_embeddings(self, texts: List[str], task_type: str = "retrieval_document") -> List[List[float]]:
         """
         Generate embeddings for a list of texts using Gemini text-embedding-004.
-        
+
         Args:
             texts: List of text strings to embed
             task_type: Type of task for embedding optimization
-            
+
         Returns:
             List of embedding vectors
         """
         try:
             embeddings = []
-            
+
             # Process texts in batches to avoid rate limits
             batch_size = 10
             for i in range(0, len(texts), batch_size):
                 batch = texts[i:i + batch_size]
                 batch_embeddings = []
-                
+
                 for text in batch:
                     # Run embedding generation in thread pool to avoid blocking
                     loop = asyncio.get_event_loop()
                     result = await loop.run_in_executor(
                         None,
-                        lambda: self.embedding_model.embed_content(
-                            content=text,
-                            task_type=task_type
+                        lambda t=text: self.client.models.embed_content(
+                            model=self.settings.embedding_model,
+                            contents=t,
+                            config=types.EmbedContentConfig(
+                                task_type=task_type
+                            )
                         )
                     )
-                    batch_embeddings.append(result['embedding'])
-                
+                    batch_embeddings.append(result.embeddings[0].values)
+
                 embeddings.extend(batch_embeddings)
-                
+
                 # Small delay between batches to respect rate limits
                 if i + batch_size < len(texts):
                     await asyncio.sleep(0.1)
-            
+
             logger.info(f"Generated embeddings for {len(texts)} texts")
             return embeddings
-            
+
         except Exception as e:
             logger.error(f"Failed to generate embeddings: {e}")
             raise
@@ -89,11 +86,11 @@ class GeminiClient:
     async def generate_content(self, prompt: str, **kwargs) -> str:
         """
         Generate content using Gemini 1.5 Pro.
-        
+
         Args:
             prompt: The input prompt
             **kwargs: Additional generation parameters
-            
+
         Returns:
             Generated text content
         """
@@ -102,12 +99,16 @@ class GeminiClient:
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None,
-                lambda: self.llm_model.generate_content(prompt, **kwargs)
+                lambda: self.client.models.generate_content(
+                    model=self.settings.llm_model,
+                    contents=prompt,
+                    **kwargs
+                )
             )
-            
+
             logger.info("Content generated successfully")
             return response.text
-            
+
         except Exception as e:
             logger.error(f"Failed to generate content: {e}")
             raise
@@ -142,12 +143,24 @@ class GeminiClient:
         """
         
         try:
-            response = await self.generate_content(prompt)
+            # Use structured output for better JSON parsing
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: self.client.models.generate_content(
+                    model=self.settings.llm_model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json"
+                    )
+                )
+            )
+
             # Parse JSON response
             import json
-            analysis = json.loads(response.strip())
+            analysis = json.loads(response.text.strip())
             return analysis
-            
+
         except Exception as e:
             logger.error(f"Failed to analyze query: {e}")
             # Return default analysis if parsing fails
@@ -207,11 +220,23 @@ class GeminiClient:
         """
         
         try:
-            response = await self.generate_content(prompt)
+            # Use structured output for better JSON parsing
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: self.client.models.generate_content(
+                    model=self.settings.llm_model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json"
+                    )
+                )
+            )
+
             import json
-            evaluation = json.loads(response.strip())
+            evaluation = json.loads(response.text.strip())
             return evaluation
-            
+
         except Exception as e:
             logger.error(f"Failed to evaluate coverage: {e}")
             # Return default response if parsing fails

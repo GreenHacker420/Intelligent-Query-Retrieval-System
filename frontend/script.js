@@ -3,6 +3,8 @@ class DocumentAnalyzer {
     constructor() {
         this.apiBaseUrl = 'http://localhost:8000';
         this.currentResults = null;
+        this.currentFile = null;
+        this.uploadMethod = 'upload'; // 'upload' or 'url'
         this.init();
     }
 
@@ -14,16 +16,27 @@ class DocumentAnalyzer {
     bindEvents() {
         // Main analyze button
         document.getElementById('analyzeBtn').addEventListener('click', () => this.analyzeDocument());
-        
+
         // Add question button
         document.getElementById('addQuestion').addEventListener('click', () => this.addQuestionField());
-        
+
         // Export button
         document.getElementById('exportBtn').addEventListener('click', () => this.exportResults());
-        
+
         // Retry button
         document.getElementById('retryBtn').addEventListener('click', () => this.hideError());
-        
+
+        // Upload method tabs
+        document.querySelectorAll('.upload-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const method = e.target.getAttribute('data-method');
+                this.switchUploadMethod(method);
+            });
+        });
+
+        // File upload events
+        this.setupFileUpload();
+
         // Sample URL buttons
         document.querySelectorAll('.sample-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -32,7 +45,7 @@ class DocumentAnalyzer {
                 this.showToast('Sample URL loaded', 'success');
             });
         });
-        
+
         // Sample question buttons
         document.querySelectorAll('.sample-question-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -52,6 +65,168 @@ class DocumentAnalyzer {
     setupSampleData() {
         // Add initial question field event listeners
         this.updateQuestionFieldEvents();
+    }
+
+    switchUploadMethod(method) {
+        this.uploadMethod = method;
+
+        // Update tab appearance
+        document.querySelectorAll('.upload-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`[data-method="${method}"]`).classList.add('active');
+
+        // Show/hide sections
+        if (method === 'upload') {
+            document.getElementById('uploadSection').style.display = 'block';
+            document.getElementById('urlSection').style.display = 'none';
+        } else {
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('urlSection').style.display = 'block';
+        }
+
+        // Clear current file/URL
+        this.clearCurrentDocument();
+    }
+
+    setupFileUpload() {
+        const dropZone = document.getElementById('fileDropZone');
+        const fileInput = document.getElementById('fileInput');
+        const browseBtn = document.getElementById('browseBtn');
+        const removeFileBtn = document.getElementById('removeFileBtn');
+
+        // Browse button click
+        browseBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Drop zone click
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                this.handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        // Remove file button
+        removeFileBtn.addEventListener('click', () => {
+            this.clearCurrentDocument();
+        });
+
+        // Drag and drop events
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                this.handleFileSelect(files[0]);
+            }
+        });
+    }
+
+    handleFileSelect(file) {
+        // Validate file type
+        const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword', 'text/plain'];
+        const allowedExtensions = ['.pdf', '.docx', '.doc', '.txt'];
+
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+
+        if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+            this.showToast('Please select a PDF, DOCX, DOC, or TXT file', 'error');
+            return;
+        }
+
+        // Validate file size (10MB limit)
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            this.showToast('File size must be less than 10MB', 'error');
+            return;
+        }
+
+        this.currentFile = file;
+        this.displayFilePreview(file);
+        this.showToast('File selected successfully', 'success');
+    }
+
+    displayFilePreview(file) {
+        const preview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const fileIcon = preview.querySelector('.file-icon i');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+
+        // Set file info
+        fileName.textContent = file.name;
+        fileSize.textContent = this.formatFileSize(file.size);
+
+        // Set file icon based on type
+        const extension = file.name.split('.').pop().toLowerCase();
+        fileIcon.className = this.getFileIcon(extension);
+        preview.querySelector('.file-icon').className = `file-icon ${extension}`;
+
+        // Show preview and hide drop zone
+        document.getElementById('fileDropZone').style.display = 'none';
+        preview.style.display = 'block';
+
+        // Set progress
+        progressFill.style.width = '100%';
+        progressText.textContent = 'Ready to analyze';
+    }
+
+    clearCurrentDocument() {
+        this.currentFile = null;
+
+        // Reset file input
+        document.getElementById('fileInput').value = '';
+
+        // Reset URL input
+        document.getElementById('documentUrl').value = '';
+
+        // Hide file preview and show drop zone
+        document.getElementById('filePreview').style.display = 'none';
+        document.getElementById('fileDropZone').style.display = 'block';
+
+        // Reset progress
+        document.getElementById('progressFill').style.width = '0%';
+        document.getElementById('progressText').textContent = 'Ready to analyze';
+    }
+
+    getFileIcon(extension) {
+        switch (extension) {
+            case 'pdf':
+                return 'fas fa-file-pdf';
+            case 'docx':
+            case 'doc':
+                return 'fas fa-file-word';
+            case 'txt':
+                return 'fas fa-file-alt';
+            default:
+                return 'fas fa-file';
+        }
+    }
+
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
     addQuestionField() {
@@ -121,76 +296,146 @@ class DocumentAnalyzer {
     }
 
     validateForm() {
-        const documentUrl = document.getElementById('documentUrl').value.trim();
         const questionFields = document.querySelectorAll('.question-field');
-        
-        // Validate URL
-        if (!documentUrl) {
-            this.showToast('Please enter a document URL', 'error');
-            return false;
+
+        // Validate document input based on method
+        let documentSource = null;
+
+        if (this.uploadMethod === 'upload') {
+            if (!this.currentFile) {
+                this.showToast('Please select a document file', 'error');
+                return false;
+            }
+            documentSource = { type: 'file', data: this.currentFile };
+        } else {
+            const documentUrl = document.getElementById('documentUrl').value.trim();
+
+            if (!documentUrl) {
+                this.showToast('Please enter a document URL', 'error');
+                return false;
+            }
+
+            try {
+                new URL(documentUrl);
+            } catch {
+                this.showToast('Please enter a valid URL', 'error');
+                return false;
+            }
+
+            documentSource = { type: 'url', data: documentUrl };
         }
-        
-        try {
-            new URL(documentUrl);
-        } catch {
-            this.showToast('Please enter a valid URL', 'error');
-            return false;
-        }
-        
+
         // Validate questions
         const questions = Array.from(questionFields)
             .map(field => field.value.trim())
             .filter(q => q.length > 0);
-            
+
         if (questions.length === 0) {
             this.showToast('Please enter at least one question', 'error');
             return false;
         }
-        
+
         if (questions.length > 10) {
             this.showToast('Maximum 10 questions allowed', 'error');
             return false;
         }
-        
-        return { documentUrl, questions };
+
+        return { documentSource, questions };
     }
 
     async analyzeDocument() {
         const formData = this.validateForm();
         if (!formData) return;
-        
+
         this.setLoading(true);
         this.hideError();
         this.hideResults();
-        
+
         try {
+            let documentUrl;
+
+            if (formData.documentSource.type === 'file') {
+                // For file uploads, we need to upload the file first
+                documentUrl = await this.uploadFile(formData.documentSource.data);
+            } else {
+                // For URL input, use the URL directly
+                documentUrl = formData.documentSource.data;
+            }
+
             const response = await fetch(`${this.apiBaseUrl}/api/v1/hackrx/run`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    documents: formData.documentUrl,
+                    documents: documentUrl,
                     questions: formData.questions
                 })
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
             }
-            
+
             const results = await response.json();
             this.currentResults = results;
             this.displayResults(results);
             this.showToast('Analysis completed successfully!', 'success');
-            
+
         } catch (error) {
             console.error('Analysis error:', error);
             this.showError(error.message);
             this.showToast('Analysis failed. Please try again.', 'error');
         } finally {
             this.setLoading(false);
+        }
+    }
+
+    async uploadFile(file) {
+        try {
+            // Update progress
+            this.updateUploadProgress(0, 'Uploading...');
+
+            // Create FormData for file upload
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Upload file to backend
+            const response = await fetch(`${this.apiBaseUrl}/api/v1/hackrx/upload`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || `Upload failed: HTTP ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            // Update progress
+            this.updateUploadProgress(100, 'Upload complete');
+
+            this.showToast('File uploaded successfully', 'success');
+            return result.file_url;
+
+        } catch (error) {
+            this.updateUploadProgress(0, 'Upload failed');
+            throw new Error(`File upload failed: ${error.message}`);
+        }
+    }
+
+    updateUploadProgress(percentage, text) {
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+
+        if (progressFill) {
+            progressFill.style.width = `${percentage}%`;
+        }
+
+        if (progressText) {
+            progressText.textContent = text;
         }
     }
 

@@ -22,14 +22,14 @@ class Settings(BaseSettings):
     
     # Pinecone Configuration
     pinecone_api_key: str = Field(..., env="PINECONE_API_KEY")
-    pinecone_environment: str = Field(..., env="PINECONE_ENVIRONMENT")
+    pinecone_environment: Optional[str] = Field(default=None, env="PINECONE_ENVIRONMENT")
     pinecone_index_name: str = Field(default="hackrx-documents", env="PINECONE_INDEX_NAME")
     
-    # Processing Configuration
+    # Processing Configuration (optimized for speed)
     max_chunk_size: int = Field(default=1024, env="MAX_CHUNK_SIZE")
     chunk_overlap: int = Field(default=128, env="CHUNK_OVERLAP")
-    max_retrieval_results: int = Field(default=20, env="MAX_RETRIEVAL_RESULTS")
-    rerank_top_k: int = Field(default=5, env="RERANK_TOP_K")
+    max_retrieval_results: int = Field(default=10, env="MAX_RETRIEVAL_RESULTS")  # Reduced for speed
+    rerank_top_k: int = Field(default=3, env="RERANK_TOP_K")  # Reduced for speed
     max_document_size_mb: int = Field(default=50, env="MAX_DOCUMENT_SIZE_MB")
     
     # API Configuration
@@ -41,8 +41,8 @@ class Settings(BaseSettings):
     cache_ttl_seconds: int = Field(default=3600, env="CACHE_TTL_SECONDS")
     
     # Model Configuration
-    embedding_model: str = "models/text-embedding-004"
-    llm_model: str = "models/gemini-1.5-pro"
+    embedding_model: str = "text-embedding-004"
+    llm_model: str = "gemini-2.0-flash"
     
     class Config:
         env_file = ".env"
